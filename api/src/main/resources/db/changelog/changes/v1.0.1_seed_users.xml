@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="2" author="imes-team">
+        <!-- Admin user: admin@imes.com / admin123 -->
+        <insert tableName="users">
+            <column name="email" value="admin@imes.com"/>
+            <column name="password" value="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"/>
+            <column name="full_name" value="System Administrator"/>
+            <column name="phone_number" value="0901234567"/>
+            <column name="role" value="ADMIN"/>
+            <column name="is_active" value="true"/>
+        </insert>
+
+        <!-- HR user: hr@imes.com / hr123 -->
+        <insert tableName="users">
+            <column name="email" value="hr@imes.com"/>
+            <column name="password" value="$2a$10$YGW3g.4wV9YSL3pzqQJ0WuZPZqx6z6.JvH7JrLCLJYZhQz6QH6qvO"/>
+            <column name="full_name" value="HR Manager"/>
+            <column name="phone_number" value="0902345678"/>
+            <column name="role" value="HR"/>
+            <column name="is_active" value="true"/>
+        </insert>
+
+        <!-- Mentor user: mentor@imes.com / mentor123 -->
+        <insert tableName="users">
+            <column name="email" value="mentor@imes.com"/>
+            <column name="password" value="$2a$10$8.x5Q7YZ6qM5X3Z5L8qP7.YpHZqK3z3x8x3x8x3x8x3x8x3x8x"/>
+            <column name="full_name" value="Senior Mentor"/>
+            <column name="phone_number" value="0903456789"/>
+            <column name="role" value="MENTOR"/>
+            <column name="is_active" value="true"/>
+        </insert>
+
+        <!-- Intern user: intern@imes.com / intern123 -->
+        <insert tableName="users">
+            <column name="email" value="intern@imes.com"/>
+            <column name="password" value="$2a$10$9.y6R8Za7rN6Y4a6M9rQ8.ZqIaLr4a4y9y4y9y4y9y4y9y4y9y"/>
+            <column name="full_name" value="Test Intern"/>
+            <column name="phone_number" value="0904567890"/>
+            <column name="role" value="INTERN"/>
+            <column name="is_active" value="true"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

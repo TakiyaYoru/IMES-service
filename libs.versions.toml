@@ -3,6 +3,7 @@ java = "21"
 springBoot = "3.2.2"
 mapstruct = "1.5.5.Final"
 lombok = "1.18.30"
+jjwt = "0.12.3"
 
 [libraries]
 # Core dependencies
@@ -10,6 +11,11 @@ mapstruct = { module = 'org.mapstruct:mapstruct', version.ref = 'mapstruct' }
 mapstructProcessor = { module = 'org.mapstruct:mapstruct-processor', version.ref = 'mapstruct' }
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok' }
 lombokProcessor = { module = 'org.projectlombok:lombok', version.ref = 'lombok' }
+
+# JWT
+jjwtApi = { module = 'io.jsonwebtoken:jjwt-api', version.ref = 'jjwt' }
+jjwtImpl = { module = 'io.jsonwebtoken:jjwt-impl', version.ref = 'jjwt' }
+jjwtJackson = { module = 'io.jsonwebtoken:jjwt-jackson', version.ref = 'jjwt' }
 
 # Utilities
 apacheCommons = 'org.apache.commons:commons-lang3:3.14.0'

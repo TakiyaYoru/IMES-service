@@ -2,7 +2,9 @@ package com.imes.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Main application class for IMES (Intern Management & Evaluation System)
@@ -17,6 +19,8 @@ import org.springframework.context.annotation.ComponentScan;
     "com.imes.infra",
     "com.imes.common"
 })
+@EnableJpaRepositories(basePackages = "com.imes.infra.repository")
+@EntityScan(basePackages = "com.imes.infra.entity")
 public class ImesApplication {
 
     public static void main(String[] args) {
