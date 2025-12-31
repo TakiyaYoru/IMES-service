@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: imes-postgres
+    environment:
+      POSTGRES_DB: imes_db
+      POSTGRES_USER: imes_user
+      POSTGRES_PASSWORD: imes_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - imes-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  imes-network:
+    driver: bridge

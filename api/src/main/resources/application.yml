@@ -7,26 +7,30 @@ spring:
   application:
     name: imes-service
   
-  # Datasource temporarily disabled - will configure after PostgreSQL user setup
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/imes_db
+    username: imes_user
+    password: imes_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
   
-  # datasource:
-  #   url: jdbc:postgresql://localhost:5432/imes_db
-  #   username: imes_user
-  #   password: imes_password
-  #   driver-class-name: org.postgresql.Driver
-  
-  # jpa:
-  #   database-platform: org.hibernate.dialect.PostgreSQLDialect
-  #   hibernate:
-  #     ddl-auto: update
-  #   show-sql: true
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
   
   liquibase:
-    enabled: false
+    enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
 
