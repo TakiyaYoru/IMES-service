@@ -21,7 +21,7 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
-    public ResponseEntity<PageResponse<UserResponse>> getAllUsers(
+    public ResponseEntity<ResponseApi<PageResponse<UserResponse>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
@@ -30,50 +30,50 @@ public class UserController {
         log.info("GET /users - page: {}, size: {}, keyword: {}, role: {}, isActive: {}", 
                  page, size, keyword, role, isActive);
         PageResponse<UserResponse> response = userService.getAllUsers(page, size, keyword, role, isActive);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseApi.success(response));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR') or #id == authentication.principal.id")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ResponseApi<UserResponse>> getUserById(@PathVariable Long id) {
         log.info("GET /users/{}", id);
         UserResponse response = userService.getUserById(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseApi.success(response));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<ResponseApi<UserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
         log.info("POST /users - email: {}", request.getEmail());
         UserResponse response = userService.createUser(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseApi.success(response));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponse> updateUser(
+    public ResponseEntity<ResponseApi<UserResponse>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request) {
         log.info("PUT /users/{}", id);
         UserResponse response = userService.updateUser(id, request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseApi.success(response));
     }
 
     @PutMapping("/{id}/password")
     @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<ResponseApi<Void>> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
         log.info("PUT /users/{}/password", id);
         userService.changePassword(id, request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ResponseApi.success());
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserResponse> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ResponseApi<UserResponse>> deleteUser(@PathVariable Long id) {
         log.info("DELETE /users/{}", id);
         UserResponse response = userService.deleteUser(id);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ResponseApi.success(response));
     }
 }

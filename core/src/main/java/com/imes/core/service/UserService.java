@@ -2,6 +2,8 @@ package com.imes.core.service;
 
 import com.imes.common.constant.Role;
 import com.imes.common.dto.*;
+import com.imes.core.exception.ClientSideException;
+import com.imes.core.exception.ErrorCode;
 import com.imes.infra.entity.UserEntity;
 import com.imes.infra.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +30,14 @@ public class UserService {
     public UserResponse getUserById(Long id) {
         log.info("Getting user by id: {}", id);
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + id));
         return mapToUserResponse(user);
     }
 
     public UserResponse getUserByEmail(String email) {
         log.info("Getting user by email: {}", email);
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "User not found with email: " + email));
         return mapToUserResponse(user);
     }
 
@@ -103,7 +104,7 @@ public class UserService {
         log.info("Creating user with email: {}", request.getEmail());
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + request.getEmail());
+            throw new ClientSideException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already exists: " + request.getEmail());
         }
 
         UserEntity user = UserEntity.builder()
@@ -125,11 +126,11 @@ public class UserService {
         log.info("Updating user id: {}", id);
 
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + id));
 
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Email already exists: " + request.getEmail());
+                throw new ClientSideException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already exists: " + request.getEmail());
             }
             user.setEmail(request.getEmail());
         }
@@ -160,10 +161,10 @@ public class UserService {
         log.info("Changing password for user id: {}", id);
 
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + id));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Old password is incorrect");
+            throw new ClientSideException(ErrorCode.INVALID_PASSWORD, "Old password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -176,7 +177,7 @@ public class UserService {
         log.info("Deleting (deactivating) user id: {}", id);
 
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "User not found with id: " + id));
 
         user.setIsActive(false);
         UserEntity deactivatedUser = userRepository.save(user);
