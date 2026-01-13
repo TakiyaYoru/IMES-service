@@ -1,5 +1,6 @@
 package com.imes.common.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -10,7 +11,7 @@ public record InternProfileResponse(
         String phoneNumber,
         String major,
         String university,
-        Double gpa,
+        BigDecimal gpa,
         String skills,
         LocalDate startDate,
         LocalDate endDate,

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -37,7 +38,7 @@ public class InternProfileEntity {
     private String university;
 
     @Column(nullable = false, precision = 3, scale = 2)
-    private Double gpa;
+    private BigDecimal gpa;
 
     @Column(columnDefinition = "TEXT")
     private String skills;

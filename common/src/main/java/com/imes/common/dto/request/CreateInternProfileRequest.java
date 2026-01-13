@@ -2,6 +2,8 @@ package com.imes.common.dto.request;
 
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
+
 public record CreateInternProfileRequest(
         @NotBlank(message = "Email không được để trống")
         @Email(message = "Email không hợp lệ")
@@ -23,7 +25,7 @@ public record CreateInternProfileRequest(
         @NotNull(message = "GPA không được để trống")
         @DecimalMin(value = "0.0", message = "GPA phải >= 0.0")
         @DecimalMax(value = "4.0", message = "GPA phải <= 4.0")
-        Double gpa,
+        BigDecimal gpa,
 
         @NotBlank(message = "Kỹ năng không được để trống")
         String skills

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/intern-profiles")
+@RequestMapping("/intern-profiles")
 @RequiredArgsConstructor
 public class InternProfileController {
 

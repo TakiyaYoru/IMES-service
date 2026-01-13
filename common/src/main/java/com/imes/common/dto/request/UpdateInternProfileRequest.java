@@ -2,6 +2,8 @@ package com.imes.common.dto.request;
 
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
+
 public record UpdateInternProfileRequest(
         @Email(message = "Email không hợp lệ")
         String email,
@@ -17,7 +19,7 @@ public record UpdateInternProfileRequest(
 
         @DecimalMin(value = "0.0", message = "GPA phải >= 0.0")
         @DecimalMax(value = "4.0", message = "GPA phải <= 4.0")
-        Double gpa,
+        BigDecimal gpa,
 
         String skills,
 
