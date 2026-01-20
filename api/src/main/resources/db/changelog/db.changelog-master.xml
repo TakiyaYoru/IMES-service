@@ -10,5 +10,6 @@
     <include file="db/changelog/changes/v1.0.1_seed_users.xml"/>
     <include file="db/changelog/changes/v1.0.2_fix_user_passwords.xml"/>
     <include file="db/changelog/changes/v1.1.0_create_intern_profiles_table.xml"/>
+    <include file="db/changelog/changes/v1.2.0_create_mentor_assignments_table.xml"/>
 
 </databaseChangeLog>

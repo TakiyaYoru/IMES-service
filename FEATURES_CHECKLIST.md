@@ -89,18 +89,37 @@
 
 #### ⏳ IN PROGRESS (Week 9-12)
 
-##### F7: Create Intern Profile ⏳ PENDING
+##### F7: Create Intern Profile ✅ COMPLETED
 - **Estimated**: 6 hours (backend) + 4 hours (frontend)
-- **Blocked by**: Nothing
+- **Actual**: 5 hours backend (Jan 9-13)
+- **Status**: ✅ DONE
 - **Dependencies**: User entity (ready)
 - **Task**: 2.1
-- **Week**: 9-10
-- **Backend Tasks**:
-  - [ ] Create InternProfile entity (JPA)
-  - [ ] UserRepository enhancement
-  - [ ] InternProfileService (CRUD)
-  - [ ] InternProfileController (REST endpoints)
-  - [ ] Validation (email unique, required fields)
+- **Week**: 9-10 (Started early: Jan 9)
+- **Backend Implementation** ✅:
+  - [x] Create InternProfile entity (JPA) with all fields
+  - [x] Create InternProfileRepository with 7 custom queries
+  - [x] InternProfileService with 13 CRUD + business methods
+  - [x] InternProfileController with 11 REST endpoints
+  - [x] Validation (email unique, GPA 0-4, required fields)
+  - [x] Liquibase migration v1.1.0 with 3 indexes
+  - [x] Fixed GPA type: Double → BigDecimal
+  - [x] Fixed controller path mapping: /api/intern-profiles → /intern-profiles
+- **Testing** ✅:
+  - [x] All 14 test cases created in Postman collection
+  - [x] Manual curl tests passed
+  - [x] All endpoints working (201 Created, 200 OK, 400 Bad Request)
+  - [x] Error handling verified (duplicate email, invalid GPA)
+  - [x] Soft delete working
+- **Date Completed**: Jan 13, 2026
+- **Commits**:
+  - Jan 9, 22:12:43 - feat: Create InternProfile entity and repository
+  - Jan 12, 14:30:00 - feat: Implement InternProfileService and Controller
+  - Jan 13, 14:34:31 - fix: correct InternProfileController mapping path
+- **Notes**: 
+  - Fixed Hibernate "scale has no meaning for SQL floating point types" error
+  - All 11 endpoints functional and tested
+  - Ready for production use
 
 ##### F8: Assign Mentor ⏳ PENDING
 - **Estimated**: 5 hours (backend) + 4 hours (frontend)
