@@ -29,7 +29,25 @@ public enum ErrorCode {
     // Validation errors
     VALIDATION_ERROR("3001", "VALIDATION", "Validation error"),
     INVALID_INPUT("3002", "VALIDATION", "Invalid input"),
-    MISSING_REQUIRED_FIELD("3003", "VALIDATION", "Missing required field");
+    MISSING_REQUIRED_FIELD("3003", "VALIDATION", "Missing required field"),
+    
+    // InternProfile errors
+    INTERN_PROFILE_NOT_FOUND("4001", "INTERN", "Intern profile not found"),
+    INTERN_ALREADY_EXISTS("4002", "INTERN", "Intern profile already exists"),
+    
+    // MentorAssignment errors
+    ASSIGNMENT_NOT_FOUND("5001", "ASSIGNMENT", "Mentor assignment not found"),
+    CANNOT_ASSIGN_INACTIVE_MENTOR("5002", "ASSIGNMENT", "Cannot assign inactive mentor"),
+    CANNOT_ASSIGN_INACTIVE_INTERN("5003", "ASSIGNMENT", "Cannot assign inactive intern"),
+    ASSIGNMENT_ALREADY_EXISTS("5004", "ASSIGNMENT", "Active assignment already exists for this intern"),
+    
+    // Attendance errors
+    ATTENDANCE_NOT_FOUND("6001", "ATTENDANCE", "Attendance record not found"),
+    DUPLICATE_CHECK_IN("6002", "ATTENDANCE", "Already checked in for this date"),
+    CHECK_IN_REQUIRED("6003", "ATTENDANCE", "Must check in before checking out"),
+    ALREADY_CHECKED_OUT("6004", "ATTENDANCE", "Already checked out for this attendance"),
+    INVALID_CHECK_OUT_TIME("6005", "ATTENDANCE", "Check-out time must be after check-in time"),
+    LEAVE_ALREADY_REQUESTED("6006", "ATTENDANCE", "Leave already requested for this date");
 
     private final String code;
     private final String category;
