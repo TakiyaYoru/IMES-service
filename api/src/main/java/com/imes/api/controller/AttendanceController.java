@@ -4,15 +4,21 @@ import com.imes.common.dto.request.CheckInRequest;
 import com.imes.common.dto.request.CheckOutRequest;
 import com.imes.common.dto.request.LeaveRequest;
 import com.imes.common.dto.response.AttendanceResponse;
+import com.imes.common.dto.response.AttendanceStatisticsResponse;
 import com.imes.common.dto.ResponseApi;
 import com.imes.core.service.AttendanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 /**
  * REST Controller for Attendance Management
@@ -93,5 +99,59 @@ public class AttendanceController {
         log.info("Get attendance for intern: {}, page: {}, size: {}", internId, page, size);
         Page<AttendanceResponse> responses = attendanceService.getByInternProfile(internId, page, size);
         return ResponseApi.success(responses);
+    }
+
+    /**
+     * Get attendance statistics for an intern in a date range
+     */
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
+    public ResponseApi<AttendanceStatisticsResponse> getStatistics(
+            @RequestParam Long internProfileId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        log.info("Get statistics for intern: {} from {} to {}", internProfileId, startDate, endDate);
+        AttendanceStatisticsResponse response = attendanceService.getStatistics(internProfileId, startDate, endDate);
+        return ResponseApi.success(response);
+    }
+
+    /**
+     * Get monthly attendance report
+     */
+    @GetMapping("/monthly-report")
+    @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
+    public ResponseApi<AttendanceStatisticsResponse> getMonthlyReport(
+            @RequestParam Long internProfileId,
+            @RequestParam int year,
+            @RequestParam int month) {
+        log.info("Get monthly report for intern: {} - {}/{}", internProfileId, year, month);
+        AttendanceStatisticsResponse response = attendanceService.getMonthlyReport(internProfileId, year, month);
+        return ResponseApi.success(response);
+    }
+
+    /**
+     * Approve leave request (mentor/HR only)
+     */
+    @PutMapping("/{attendanceId}/approve")
+    @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
+    public ResponseApi<AttendanceResponse> approveLeave(@PathVariable Long attendanceId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long approverId = Long.parseLong(auth.getName()); // Get user ID from token
+        log.info("Approve leave for attendance: {} by user: {}", attendanceId, approverId);
+        AttendanceResponse response = attendanceService.approveLeave(attendanceId, approverId);
+        return ResponseApi.success(response);
+    }
+
+    /**
+     * Mark intern as absent (mentor/HR action)
+     */
+    @PostMapping("/mark-absent")
+    @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
+    public ResponseApi<AttendanceResponse> markAbsent(
+            @RequestParam Long internProfileId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        log.info("Mark absent for intern: {} on date: {}", internProfileId, date);
+        AttendanceResponse response = attendanceService.markAbsent(internProfileId, date);
+        return ResponseApi.success(response);
     }
 }
