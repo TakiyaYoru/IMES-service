@@ -36,9 +36,11 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final InternProfileRepository internProfileRepository;
     
-    private static final LocalTime STANDARD_CHECK_IN_TIME = LocalTime.of(9, 0);
-    private static final LocalTime HALF_DAY_THRESHOLD = LocalTime.of(13, 0);
+    // Business Rules Constants
+    private static final LocalTime STANDARD_CHECK_IN_TIME = LocalTime.of(9, 0); // 9:00 AM
+    private static final LocalTime HALF_DAY_THRESHOLD = LocalTime.of(13, 0);    // 1:00 PM
     private static final int STANDARD_WORK_HOURS = 8;
+    private static final int HALF_DAY_HOURS = 4;
 
     /**
      * Check-in for intern

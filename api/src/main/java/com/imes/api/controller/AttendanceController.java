@@ -23,11 +23,29 @@ import java.time.LocalDate;
 /**
  * REST Controller for Attendance Management
  * 
+ * Base URL: /api/attendances
+ * 
+ * Features:
+ * - Daily check-in/check-out tracking
+ * - Auto-detect LATE status (after 9:00 AM)
+ * - Leave request management
+ * - Attendance statistics & reports
+ * - Mentor approval workflow
+ * 
  * Endpoints:
- * - POST /check-in: Intern checks in
- * - POST /check-out: Intern checks out
- * - GET /{id}: Get attendance by ID
- * - GET /intern/{internId}: List intern's attendance history
+ * - POST /check-in: Intern checks in (auto-detect LATE)
+ * - POST /check-out: Intern checks out (calculate hours)
+ * - POST /leave-request: Request leave in advance
+ * - GET /{id}: Get attendance record by ID
+ * - GET /intern/{id}: List intern's attendance history
+ * - GET /statistics: Get attendance stats for date range
+ * - GET /monthly-report: Get monthly attendance report
+ * - PUT /{id}/approve: Approve leave request (mentor only)
+ * - POST /mark-absent: Mark intern as absent (mentor/HR)
+ * 
+ * @author IMES System
+ * @version 1.0
+ * @since 2026-01-24
  */
 @RestController
 @RequestMapping("/attendances")
