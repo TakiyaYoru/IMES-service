@@ -1,0 +1,538 @@
+{
+  "info": {
+    "name": "IMES API - Task 2.3 Attendance",
+    "description": "Test collection for Attendance Management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.1.0"
+  },
+  "item": [
+    {
+      "name": "0. Setup - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status.code).to.equal('0000');",
+              "    pm.environment.set('token', jsonData.data.token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@imes.com\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "1. Check-in - On Time",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Check-in successful', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status.code).to.equal('0000');",
+              "    pm.expect(jsonData.data).to.have.property('id');",
+              "    pm.expect(jsonData.data.status).to.equal('PRESENT');",
+              "    pm.environment.set('attendance_id', jsonData.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"date\": \"2026-01-24\",\n  \"checkInTime\": \"08:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-in"]
+        }
+      }
+    },
+    {
+      "name": "2. Check-in - Late",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Marked as LATE', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status).to.equal('LATE');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"date\": \"2026-01-25\",\n  \"checkInTime\": \"09:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-in"]
+        }
+      }
+    },
+    {
+      "name": "3. Check-in - Duplicate (Should Fail)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Error: Duplicate check-in', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status.code).to.equal('6002');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"date\": \"2026-01-24\",\n  \"checkInTime\": \"08:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-in"]
+        }
+      }
+    },
+    {
+      "name": "4. Check-out - Full Day",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Check-out successful', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.checkOutTime).to.not.be.null;",
+              "    pm.expect(jsonData.data.totalHours).to.be.above(4);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"attendanceId\": {{attendance_id}},\n  \"checkOutTime\": \"17:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-out",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-out"]
+        }
+      }
+    },
+    {
+      "name": "5. Request Leave",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Leave request created', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status).to.equal('LEAVE');",
+              "    pm.expect(jsonData.data.notes).to.equal('Sick leave');",
+              "    pm.environment.set('leave_id', jsonData.data.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"leaveDate\": \"2026-01-26\",\n  \"reason\": \"Sick leave\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/leave-request",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "leave-request"]
+        }
+      }
+    },
+    {
+      "name": "6. Get Attendance by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Attendance retrieved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('id');",
+              "    pm.expect(jsonData.data.internProfileId).to.equal(1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/{{attendance_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "{{attendance_id}}"]
+        }
+      }
+    },
+    {
+      "name": "7. Get Attendance by Intern (List)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('List retrieved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.content).to.be.an('array');",
+              "    pm.expect(jsonData.data.content.length).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/intern/1?page=1&size=10",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "intern", "1"],
+          "query": [
+            {"key": "page", "value": "1"},
+            {"key": "size", "value": "10"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Get Statistics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Statistics calculated', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('totalDays');",
+              "    pm.expect(jsonData.data).to.have.property('presentDays');",
+              "    pm.expect(jsonData.data).to.have.property('attendanceRate');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/statistics?internProfileId=1&startDate=2026-01-24&endDate=2026-01-31",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "statistics"],
+          "query": [
+            {"key": "internProfileId", "value": "1"},
+            {"key": "startDate", "value": "2026-01-24"},
+            {"key": "endDate", "value": "2026-01-31"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "9. Get Monthly Report",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Monthly report generated', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('totalDays');",
+              "    pm.expect(jsonData.data).to.have.property('totalHours');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/monthly-report?internProfileId=1&year=2026&month=1",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "monthly-report"],
+          "query": [
+            {"key": "internProfileId", "value": "1"},
+            {"key": "year", "value": "2026"},
+            {"key": "month", "value": "1"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Approve Leave",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Leave approved', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.approvedBy).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/{{leave_id}}/approve",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "{{leave_id}}", "approve"]
+        }
+      }
+    },
+    {
+      "name": "11. Mark Absent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Marked as absent', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.status).to.equal('ABSENT');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/attendances/mark-absent?internProfileId=1&date=2026-01-27",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "mark-absent"],
+          "query": [
+            {"key": "internProfileId", "value": "1"},
+            {"key": "date", "value": "2026-01-27"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Check-in - Without Time (Auto Now)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('Auto time applied', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.checkInTime).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"date\": \"2026-01-28\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-in"]
+        }
+      }
+    },
+    {
+      "name": "13. Check-out - Without Time (Auto Now)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200 OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Auto time applied', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.checkOutTime).to.not.be.null;",
+              "    pm.expect(jsonData.data.totalHours).to.be.above(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"attendanceId\": {{attendance_id}}\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-out",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-out"]
+        }
+      }
+    },
+    {
+      "name": "14. Validation - Invalid Date (Future)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400 Bad Request', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test('Validation error', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status.code).to.equal('3001');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"internProfileId\": 1,\n  \"date\": \"2027-01-01\",\n  \"checkInTime\": \"08:30:00\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/attendances/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["attendances", "check-in"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api",
+      "type": "string"
+    }
+  ]
+}
