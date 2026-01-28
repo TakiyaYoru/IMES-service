@@ -7,6 +7,7 @@ import com.imes.common.dto.response.AttendanceResponse;
 import com.imes.common.dto.response.AttendanceStatisticsResponse;
 import com.imes.common.dto.ResponseApi;
 import com.imes.core.service.AttendanceService;
+import com.imes.core.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ import java.time.LocalDate;
 public class AttendanceController {
 
     private final AttendanceService attendanceService;
+    private final UserService userService;
 
     /**
      * Check-in endpoint
@@ -154,8 +156,9 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
     public ResponseApi<AttendanceResponse> approveLeave(@PathVariable Long attendanceId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Long approverId = Long.parseLong(auth.getName()); // Get user ID from token
-        log.info("Approve leave for attendance: {} by user: {}", attendanceId, approverId);
+        String email = auth.getName(); // Get email from token
+        Long approverId = userService.getUserByEmail(email).getId(); // Get user ID
+        log.info("Approve leave for attendance: {} by user: {} ({})", attendanceId, approverId, email);
         AttendanceResponse response = attendanceService.approveLeave(attendanceId, approverId);
         return ResponseApi.success(response);
     }
