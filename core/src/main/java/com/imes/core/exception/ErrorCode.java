@@ -47,7 +47,19 @@ public enum ErrorCode {
     CHECK_IN_REQUIRED("6003", "ATTENDANCE", "Must check in before checking out"),
     ALREADY_CHECKED_OUT("6004", "ATTENDANCE", "Already checked out for this attendance"),
     INVALID_CHECK_OUT_TIME("6005", "ATTENDANCE", "Check-out time must be after check-in time"),
-    LEAVE_ALREADY_REQUESTED("6006", "ATTENDANCE", "Leave already requested for this date");
+    LEAVE_ALREADY_REQUESTED("6006", "ATTENDANCE", "Leave already requested for this date"),
+    
+    // Task/Assignment Workflow errors
+    TASK_NOT_FOUND("7001", "TASK", "Task/Assignment not found"),
+    TASK_INVALID_DEADLINE("7002", "TASK", "Task deadline must be in the future"),
+    TASK_ALREADY_EXISTS("7003", "TASK", "Task with this title already exists"),
+    TASK_UNAUTHORIZED("7004", "TASK", "Unauthorized to modify this task"),
+    TASK_INSTANCE_DUPLICATE("7005", "TASK_INSTANCE", "Task already assigned to this intern"),
+    TASK_INSTANCE_NOT_FOUND("7006", "TASK_INSTANCE", "Task instance not found"),
+    SUBMISSION_DEADLINE_PASSED("7007", "SUBMISSION", "Submission deadline has passed"),
+    SUBMISSION_ALREADY_EXISTS("7008", "SUBMISSION", "Submission already exists for this task"),
+    SUBMISSION_NOT_FOUND("7009", "SUBMISSION", "Submission not found"),
+    SUBMISSION_NOT_SUBMITTED_YET("7010", "SUBMISSION", "Submission has not been submitted yet");
 
     private final String code;
     private final String category;
