@@ -57,3 +57,7 @@ TEST_CREDENTIALS.md
 DOCKER.md
 docs/TASK_*.md
 docs/SYSTEM_OVERVIEW.md
+
+# Postman Collections (private testing)
+*_Postman_Collection.json
+IMES_*_Postman_Collection.json
