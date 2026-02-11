@@ -44,3 +44,16 @@ logs/
 # Sensitive data
 *.env
 .env.local
+
+# Documentation (private/internal only)
+*_CHECKLIST.md
+*_PROMPT.md
+ONBOARDING_PROMPT.md
+FEATURES_CHECKLIST.md
+PROGRESS_CHECKLIST.md
+TESTING_CHECKLIST.md
+WEEK8_COMPLETION_CHECKLIST.md
+TEST_CREDENTIALS.md
+DOCKER.md
+docs/TASK_*.md
+docs/SYSTEM_OVERVIEW.md
