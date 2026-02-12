@@ -4,6 +4,13 @@ include 'common'
 include 'api'
 include 'core'
 include 'infra'
+include 'eureka-server'
+include 'gateway-service'
+include 'auth-service'
+include 'user-service'
+include 'intern-service'
+include 'attendance-service'
+include 'assignment-service'
 
 dependencyResolutionManagement {
     versionCatalogs {
