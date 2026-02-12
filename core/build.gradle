@@ -1,2 +1,14 @@
 // Core Module - Business logic layer
 // Dependencies are configured in root build.gradle
+
+dependencies {
+    implementation project(':infra')
+    implementation project(':common')
+    
+    // Email support
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+}
+
+bootJar {
+    enabled = false
+}
