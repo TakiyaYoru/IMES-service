@@ -10,8 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
-    private String token;
+    private Long id;
+    private String token; // Access token (JWT)
+    private String refreshToken; // Refresh token
     private String email;
     private String fullName;
     private String role;
+    private String tokenType; // Bearer
+    private Long expiresIn; // Seconds until access token expires
 }
