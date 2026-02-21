@@ -8,6 +8,9 @@ public record CreateInternProfileRequest(
         @NotBlank(message = "Email không được để trống")
         @Email(message = "Email không hợp lệ")
         String email,
+        
+        @Pattern(regexp = "^[A-Z0-9]{6,20}$", message = "Mã sinh viên phải là 6-20 ký tự, chữ in hoa và số")
+        String studentId,
 
         @NotBlank(message = "Họ tên không được để trống")
         String fullName,
@@ -28,6 +31,12 @@ public record CreateInternProfileRequest(
         BigDecimal gpa,
 
         @NotBlank(message = "Kỹ năng không được để trống")
-        String skills
+        String skills,
+        
+        Long mentorId,
+        
+        Long departmentId,
+        
+        String avatarUrl
 ) {
 }
