@@ -30,8 +30,34 @@ public interface InternProfileRepository extends JpaRepository<InternProfileEnti
 
     @Query("SELECT ip FROM InternProfileEntity ip WHERE ip.isActive = true AND ip.status = :status")
     Page<InternProfileEntity> findByStatus(@Param("status") InternStatus status, Pageable pageable);
+    
+    @Query("SELECT ip FROM InternProfileEntity ip WHERE " +
+           "(:keyword IS NULL OR :keyword = '' OR " +
+           "LOWER(ip.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(ip.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(ip.studentId) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(ip.major) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(ip.university) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:status IS NULL OR ip.status = :status) AND " +
+           "(:mentorId IS NULL OR ip.mentorId = :mentorId) AND " +
+           "(:departmentId IS NULL OR ip.departmentId = :departmentId) AND " +
+           "(:isActive IS NULL OR ip.isActive = :isActive)")
+    Page<InternProfileEntity> searchInternProfiles(
+        @Param("keyword") String keyword,
+        @Param("status") InternStatus status,
+        @Param("mentorId") Long mentorId,
+        @Param("departmentId") Long departmentId,
+        @Param("isActive") Boolean isActive,
+        Pageable pageable
+    );
+    
+    Page<InternProfileEntity> findByMentorIdAndIsActiveTrue(Long mentorId, Pageable pageable);
+    
+    Page<InternProfileEntity> findByDepartmentIdAndIsActiveTrue(Long departmentId, Pageable pageable);
 
     boolean existsByEmailAndIsActiveTrue(String email);
+    
+    boolean existsByStudentIdAndIsActiveTrue(String studentId);
 
     long countByIsActiveTrue();
 

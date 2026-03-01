@@ -16,6 +16,9 @@ import java.util.Optional;
 @Repository
 public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Long> {
 
+    // Find all active attendance records (paginated)
+    Page<AttendanceEntity> findByIsActiveTrue(Pageable pageable);
+
     // Find by ID and active
     Optional<AttendanceEntity> findByIdAndIsActiveTrue(Long id);
 

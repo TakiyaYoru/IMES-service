@@ -24,6 +24,9 @@ public class InternProfileEntity {
 
     @Column(nullable = false, unique = true, length = 255)
     private String email;
+    
+    @Column(name = "student_id", unique = true, length = 50)
+    private String studentId;
 
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
@@ -48,6 +51,15 @@ public class InternProfileEntity {
 
     @Column(name = "end_date")
     private LocalDate endDate;
+    
+    @Column(name = "mentor_id")
+    private Long mentorId;
+    
+    @Column(name = "department_id")
+    private Long departmentId;
+    
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

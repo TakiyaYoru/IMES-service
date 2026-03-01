@@ -47,6 +47,10 @@ public interface MentorAssignmentRepository extends JpaRepository<MentorAssignme
     // Count by status
     @Query("SELECT COUNT(m) FROM MentorAssignmentEntity m WHERE m.assignmentStatus = :status AND m.isActive = true")
     long countByStatusAndIsActiveTrue(@Param("status") AssignmentStatus status);
+    
+    // Count active interns assigned to mentor
+    @Query("SELECT COUNT(m) FROM MentorAssignmentEntity m WHERE m.mentorId = :mentorId AND m.isActive = true")
+    long countActiveInternsByMentorId(@Param("mentorId") Long mentorId);
 
     // Count total active
     long countByIsActiveTrue();
