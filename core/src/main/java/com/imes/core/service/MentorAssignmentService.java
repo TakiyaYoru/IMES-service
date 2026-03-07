@@ -23,6 +23,7 @@ import java.time.LocalDate;
 @Slf4j
 public class MentorAssignmentService {
 
+    private static final int MAX_INTERNS_PER_MENTOR = 5;
     private final MentorAssignmentRepository mentorAssignmentRepository;
 
     /**
@@ -37,6 +38,14 @@ public class MentorAssignmentService {
         }
         if (request.internProfileId() == null || request.internProfileId() <= 0) {
             throw new ClientSideException(ErrorCode.BAD_REQUEST, "Invalid intern profile ID");
+        }
+
+        // Check mentor capacity - max 5 active interns
+        long currentInterns = mentorAssignmentRepository.countActiveInternsByMentorId(request.mentorId());
+        if (currentInterns >= MAX_INTERNS_PER_MENTOR) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST, 
+                String.format("Mentor capacity exceeded. Maximum %d interns allowed per mentor. Current: %d", 
+                    MAX_INTERNS_PER_MENTOR, currentInterns));
         }
 
         // Check if assignment already exists

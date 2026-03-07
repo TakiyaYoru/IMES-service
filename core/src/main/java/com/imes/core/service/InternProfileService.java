@@ -29,14 +29,22 @@ public class InternProfileService {
             throw new ClientSideException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email đã tồn tại");
         }
 
+        if (internProfileRepository.existsByStudentIdAndIsActiveTrue(request.studentId())) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST, "Mã sinh viên đã tồn tại");
+        }
+
         InternProfileEntity entity = InternProfileEntity.builder()
                 .email(request.email())
+                .studentId(request.studentId())
                 .fullName(request.fullName())
                 .phoneNumber(request.phoneNumber())
                 .major(request.major())
                 .university(request.university())
                 .gpa(request.gpa())
                 .skills(request.skills())
+                .mentorId(request.mentorId())
+                .departmentId(request.departmentId())
+                .avatarUrl(request.avatarUrl())
                 .status(InternStatus.NEW)
                 .isActive(true)
                 .build();
@@ -66,8 +74,36 @@ public class InternProfileService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<InternProfileResponse> searchInternProfiles(String keyword, Pageable pageable) {
-        Page<InternProfileEntity> page = internProfileRepository.searchByKeyword(keyword, pageable);
+    public PageResponse<InternProfileResponse> searchInternProfiles(String keyword, String status, Long mentorId, Long departmentId, Pageable pageable) {
+        InternStatus internStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                internStatus = InternStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new ClientSideException(ErrorCode.BAD_REQUEST, "Trạng thái không hợp lệ");
+            }
+        }
+
+        Page<InternProfileEntity> page = internProfileRepository.searchInternProfiles(
+                keyword,
+                internStatus,
+                mentorId,
+                departmentId,
+                true,
+                pageable
+        );
+        return convertToPageResponse(page);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<InternProfileResponse> getInternsByMentor(Long mentorId, Pageable pageable) {
+        Page<InternProfileEntity> page = internProfileRepository.findByMentorIdAndIsActiveTrue(mentorId, pageable);
+        return convertToPageResponse(page);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<InternProfileResponse> getInternsByDepartment(Long departmentId, Pageable pageable) {
+        Page<InternProfileEntity> page = internProfileRepository.findByDepartmentIdAndIsActiveTrue(departmentId, pageable);
         return convertToPageResponse(page);
     }
 
@@ -93,12 +129,22 @@ public class InternProfileService {
             entity.setEmail(request.email());
         }
 
+        if (request.studentId() != null && !request.studentId().equals(entity.getStudentId())) {
+            if (internProfileRepository.existsByStudentIdAndIsActiveTrue(request.studentId())) {
+                throw new ClientSideException(ErrorCode.BAD_REQUEST, "Mã sinh viên đã tồn tại");
+            }
+            entity.setStudentId(request.studentId());
+        }
+
         if (request.fullName() != null) entity.setFullName(request.fullName());
         if (request.phoneNumber() != null) entity.setPhoneNumber(request.phoneNumber());
         if (request.major() != null) entity.setMajor(request.major());
         if (request.university() != null) entity.setUniversity(request.university());
         if (request.gpa() != null) entity.setGpa(request.gpa());
         if (request.skills() != null) entity.setSkills(request.skills());
+        if (request.mentorId() != null) entity.setMentorId(request.mentorId());
+        if (request.departmentId() != null) entity.setDepartmentId(request.departmentId());
+        if (request.avatarUrl() != null) entity.setAvatarUrl(request.avatarUrl());
         if (request.status() != null) {
             try {
                 entity.setStatus(InternStatus.valueOf(request.status().toUpperCase()));
@@ -171,6 +217,7 @@ public class InternProfileService {
         return new InternProfileResponse(
                 entity.getId(),
                 entity.getEmail(),
+                entity.getStudentId(),
                 entity.getFullName(),
                 entity.getPhoneNumber(),
                 entity.getMajor(),
@@ -179,6 +226,11 @@ public class InternProfileService {
                 entity.getSkills(),
                 entity.getStartDate(),
                 entity.getEndDate(),
+                entity.getMentorId(),
+                null, // mentorName - will be resolved by client or in a separate call
+                entity.getDepartmentId(),
+                null, // departmentName - will be resolved by client or in a separate call
+                entity.getAvatarUrl(),
                 entity.getStatus().name(),
                 entity.getIsActive(),
                 entity.getCreatedAt(),

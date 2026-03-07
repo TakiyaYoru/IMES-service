@@ -164,6 +164,16 @@ public class AttendanceService {
     }
 
     /**
+     * Get all attendance records (paginated)
+     */
+    @Transactional(readOnly = true)
+    public Page<AttendanceResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
+        Page<AttendanceEntity> attendances = attendanceRepository.findByIsActiveTrue(pageable);
+        return attendances.map(this::mapToResponse);
+    }
+
+    /**
      * Get attendance by ID
      */
     @Transactional(readOnly = true)
@@ -178,7 +188,7 @@ public class AttendanceService {
      */
     @Transactional(readOnly = true)
     public Page<AttendanceResponse> getByInternProfile(Long internProfileId, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "date"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
         Page<AttendanceEntity> attendances = attendanceRepository.findByInternProfileId(internProfileId, pageable);
         return attendances.map(this::mapToResponse);
     }

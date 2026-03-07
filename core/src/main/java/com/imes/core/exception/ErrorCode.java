@@ -49,6 +49,12 @@ public enum ErrorCode {
     INVALID_CHECK_OUT_TIME("6005", "ATTENDANCE", "Check-out time must be after check-in time"),
     LEAVE_ALREADY_REQUESTED("6006", "ATTENDANCE", "Leave already requested for this date"),
     
+    // Department errors
+    DEPARTMENT_NOT_FOUND("8001", "DEPARTMENT", "Department not found"),
+    DEPARTMENT_NAME_EXISTS("8002", "DEPARTMENT", "Department name already exists"),
+    DEPARTMENT_CODE_EXISTS("8003", "DEPARTMENT", "Department code already exists"),
+    INVALID_DEPARTMENT_MANAGER("8004", "DEPARTMENT", "Invalid department manager"),
+    
     // Task/Assignment Workflow errors
     TASK_NOT_FOUND("7001", "TASK", "Task/Assignment not found"),
     TASK_INVALID_DEADLINE("7002", "TASK", "Task deadline must be in the future"),
