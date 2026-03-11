@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/intern-profiles")
+@RequestMapping("/interns")
 @RequiredArgsConstructor
 public class InternProfileController {
 
@@ -49,35 +49,54 @@ public class InternProfileController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MENTOR')")
     public ResponseEntity<ResponseApi<PageResponse<InternProfileResponse>>> getAllInternProfiles(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long mentorId,
+            @RequestParam(required = false) Long departmentId,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String order) {
         
         Sort.Direction direction = order.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction, sortBy));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        if (keyword != null || status != null || mentorId != null || departmentId != null) {
+            return ResponseEntity.ok(ResponseApi.success(
+                    internProfileService.searchInternProfiles(keyword, status, mentorId, departmentId, pageable)
+            ));
+        }
+
         return ResponseEntity.ok(ResponseApi.success(internProfileService.getAllInternProfiles(pageable)));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MENTOR')")
     public ResponseEntity<ResponseApi<PageResponse<InternProfileResponse>>> searchInternProfiles(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long mentorId,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String order) {
         
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(ResponseApi.success(internProfileService.searchInternProfiles(keyword, pageable)));
+        Sort.Direction direction = order.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return ResponseEntity.ok(ResponseApi.success(
+                internProfileService.searchInternProfiles(keyword, status, mentorId, departmentId, pageable)
+        ));
     }
 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MENTOR')")
     public ResponseEntity<ResponseApi<PageResponse<InternProfileResponse>>> getInternProfilesByStatus(
             @PathVariable String status,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(ResponseApi.success(internProfileService.getInternProfilesByStatus(status, pageable)));
     }
 

@@ -97,6 +97,19 @@ public class AttendanceController {
     }
 
     /**
+     * Get all attendance records (paginated)
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('MENTOR', 'HR', 'ADMIN')")
+    public ResponseApi<Page<AttendanceResponse>> getAll(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("Get all attendance records, page: {}, size: {}", page, size);
+        Page<AttendanceResponse> responses = attendanceService.getAll(page, size);
+        return ResponseApi.success(responses);
+    }
+
+    /**
      * Get attendance by ID
      */
     @GetMapping("/{id}")
