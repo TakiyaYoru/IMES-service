@@ -37,6 +37,12 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Lo
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT a FROM AttendanceEntity a WHERE a.date BETWEEN :startDate AND :endDate " +
+           "AND a.isActive = true ORDER BY a.date ASC")
+    List<AttendanceEntity> findAllInDateRange(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
     // Find by intern (paginated)
     @Query("SELECT a FROM AttendanceEntity a WHERE a.internProfileId = :internId " +
            "AND a.isActive = true ORDER BY a.date DESC")

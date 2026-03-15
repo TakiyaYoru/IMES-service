@@ -28,15 +28,22 @@ public class AssignmentAttachmentController {
             @PathVariable("id") Long assignmentId,
             @RequestPart("file") MultipartFile file,
             @RequestParam(value = "fileType", required = false) String fileType,
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "3") Long uploadedBy
+            @RequestHeader(value = "X-User-Id", required = false) Long uploadedBy,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole
     ) {
+        uploadedBy = requireUserId(uploadedBy);
+        requireAnyRole(userRole, "MENTOR", "INTERN", "HR", "ADMIN");
         log.info("Uploading attachment for assignment {} by user {}", assignmentId, uploadedBy);
         UploadAttachmentResponse response = assignmentAttachmentService.uploadAttachment(assignmentId, file, fileType, uploadedBy);
         return ResponseApi.success(response);
     }
 
-    @GetMapping("/{id}/attachments")
-    public ResponseApi<List<AttachmentResponse>> getAttachments(@PathVariable("id") Long assignmentId) {
+        @GetMapping("/{id}/attachments")
+        public ResponseApi<List<AttachmentResponse>> getAttachments(
+            @PathVariable("id") Long assignmentId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole
+    ) {
+        requireAnyRole(userRole, "MENTOR", "INTERN", "HR", "ADMIN");
         List<AttachmentResponse> attachments = assignmentAttachmentService.listAttachments(assignmentId);
         return ResponseApi.success(attachments);
     }
@@ -44,8 +51,11 @@ public class AssignmentAttachmentController {
     @DeleteMapping("/attachments/{attachmentId}")
     public ResponseApi<String> deleteAttachment(
             @PathVariable Long attachmentId,
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "3") Long requestUserId
+            @RequestHeader(value = "X-User-Id", required = false) Long requestUserId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole
     ) {
+        requestUserId = requireUserId(requestUserId);
+        requireAnyRole(userRole, "MENTOR", "INTERN", "HR", "ADMIN");
         assignmentAttachmentService.deleteAttachment(attachmentId, requestUserId);
         return ResponseApi.success("Attachment deleted successfully");
     }
@@ -56,7 +66,26 @@ public class AssignmentAttachmentController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + payload.fileName() + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                 .body(payload.resource());
+    }
+
+    private Long requireUserId(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("Missing required header: X-User-Id");
+        }
+        return userId;
+    }
+
+    private void requireAnyRole(String role, String... allowedRoles) {
+        if (role == null) {
+            throw new IllegalArgumentException("Forbidden: missing role");
+        }
+        for (String allowed : allowedRoles) {
+            if (allowed.equalsIgnoreCase(role)) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Forbidden: role " + role + " is not allowed");
     }
 }

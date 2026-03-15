@@ -23,132 +23,162 @@ import java.util.stream.Collectors;
 @Service("assignmentManagementService")
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class AssignmentService {
-    
+
     private final AssignmentRepository assignmentRepository;
     private final SubmissionRepository submissionRepository;
     private final AssignmentWorkflowService assignmentWorkflowService;
     private final AssignmentDependencyService assignmentDependencyService;
-    
+
     @Transactional
     public AssignmentResponse createAssignment(CreateAssignmentRequest request, Long mentorId) {
         log.info("Creating assignment for mentor: {}", mentorId);
-        
+
         Assignment assignment = Assignment.builder()
                 .title(request.title())
                 .description(request.description())
                 .deadline(request.deadline())
                 .mentorId(mentorId)
-            .status(AssignmentStatus.OPEN)
+                .status(AssignmentStatus.OPEN)
                 .build();
-        
+
         Assignment saved = assignmentRepository.save(assignment);
         log.info("Created assignment ID: {}", saved.getId());
-        
+
         return mapToResponse(saved);
     }
-    
+
     public Page<AssignmentResponse> getAssignmentsByMentor(Long mentorId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Assignment> assignments = assignmentRepository.findByMentorId(mentorId, pageable);
-        
         return assignments.map(this::mapToResponse);
     }
-    
+
     public AssignmentResponse getAssignmentById(Long assignmentId) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
-        
         return mapToResponse(assignment);
     }
-    
+
+    @Transactional
+    public AssignmentResponse updateAssignment(Long assignmentId, UpdateAssignmentRequest request, Long mentorId) {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
+
+        if (!assignment.getMentorId().equals(mentorId)) {
+            throw new RuntimeException("You are not authorized to update this assignment");
+        }
+
+        if (request.title() != null && !request.title().isBlank()) {
+            assignment.setTitle(request.title().trim());
+        }
+        if (request.description() != null) {
+            assignment.setDescription(request.description().trim());
+        }
+        if (request.deadline() != null) {
+            assignment.setDeadline(request.deadline());
+        }
+        if (request.status() != null) {
+            assignment.setStatus(
+                    assignmentWorkflowService.transitionOrThrow(assignment.getStatus(), request.status())
+            );
+        }
+
+        Assignment updated = assignmentRepository.save(assignment);
+        return mapToResponse(updated);
+    }
+
+    @Transactional
+    public void deleteAssignment(Long assignmentId, Long mentorId) {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
+
+        if (!assignment.getMentorId().equals(mentorId)) {
+            throw new RuntimeException("You are not authorized to delete this assignment");
+        }
+
+        if (submissionRepository.countByAssignmentId(assignmentId) > 0) {
+            throw new RuntimeException("Cannot delete assignment that already has submissions");
+        }
+
+        assignmentRepository.delete(assignment);
+    }
+
     @Transactional
     public SubmissionResponse submitAssignment(Long assignmentId, SubmitAssignmentRequest request, Long internId) {
         log.info("Intern {} submitting assignment {}", internId, assignmentId);
-        
-        // Check assignment exists
+
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
 
         assignment.setStatus(
-            assignmentWorkflowService.transitionOrThrow(assignment.getStatus(), AssignmentStatus.SUBMITTED)
+                assignmentWorkflowService.transitionOrThrow(assignment.getStatus(), AssignmentStatus.SUBMITTED)
         );
-        
-        // Check not already submitted
+
         if (submissionRepository.existsByAssignmentIdAndInternId(assignmentId, internId)) {
             throw new RuntimeException("You have already submitted this assignment");
         }
-        
-        // Create submission
+
         Submission submission = Submission.builder()
                 .assignmentId(assignmentId)
                 .internId(internId)
                 .content(request.content())
                 .attachmentUrl(request.attachmentUrl())
                 .build();
-        
-        // Auto-detect late submission
+
         if (LocalDateTime.now().isAfter(assignment.getDeadline().atTime(23, 59, 59))) {
             submission.setIsLate(true);
             log.warn("Late submission detected for assignment {} by intern {}", assignmentId, internId);
         }
-        
+
         Submission saved = submissionRepository.save(submission);
-        
         assignmentRepository.save(assignment);
-        
+
         log.info("Created submission ID: {}", saved.getId());
-        
         return mapToSubmissionResponse(saved);
     }
-    
+
     public List<SubmissionResponse> getSubmissionsByAssignment(Long assignmentId) {
         List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
-        
         return submissions.stream()
                 .map(this::mapToSubmissionResponse)
                 .collect(Collectors.toList());
     }
-    
+
     @Transactional
     public AssignmentResponse markAsCompleted(Long assignmentId) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
 
         assignmentDependencyService.validateCanComplete(assignmentId);
-        
+
         assignment.setStatus(
-            assignmentWorkflowService.transitionOrThrow(assignment.getStatus(), AssignmentStatus.COMPLETED)
+                assignmentWorkflowService.transitionOrThrow(assignment.getStatus(), AssignmentStatus.COMPLETED)
         );
         Assignment updated = assignmentRepository.save(assignment);
-        
         return mapToResponse(updated);
     }
-    
-    /**
-     * Review a submission (Mentor provides feedback and score)
-     */
+
     @Transactional
     public SubmissionResponse reviewSubmission(Long submissionId, ReviewSubmissionRequest request, Long mentorId) {
         log.info("Mentor {} reviewing submission {}", mentorId, submissionId);
-        
+
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Submission not found: " + submissionId));
-        
-        // Validate mentor owns the assignment
+
         Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
-        
+
         if (!assignment.getMentorId().equals(mentorId)) {
             throw new RuntimeException("You are not authorized to review this submission");
         }
-        
-        // Update review fields
+
         submission.setScore(request.score());
         submission.setMentorComments(request.comments());
         submission.setReviewedAt(LocalDateTime.now());
         submission.setReviewedBy(mentorId);
-        
+
         Submission updated = submissionRepository.save(submission);
 
         AssignmentStatus targetStatus = request.score() >= 5.0
@@ -160,7 +190,6 @@ public class AssignmentService {
         assignmentRepository.save(assignment);
 
         log.info("Submission {} reviewed with score {}", submissionId, request.score());
-        
         return mapToSubmissionResponse(updated);
     }
 
@@ -213,6 +242,24 @@ public class AssignmentService {
         return results;
     }
 
+    /**
+     * Get all assignments that an intern has submitted work for.
+     */
+    public Page<AssignmentResponse> getAssignmentsByIntern(Long internId, int page, int size) {
+        List<Long> assignmentIds = submissionRepository.findByInternId(internId)
+                .stream()
+                .map(Submission::getAssignmentId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (assignmentIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return assignmentRepository.findByIdIn(assignmentIds, pageable).map(this::mapToResponse);
+    }
+
     private AssignmentResponse transitionAssignmentStatus(Long assignmentId, AssignmentStatus targetStatus) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found: " + assignmentId));
@@ -228,31 +275,31 @@ public class AssignmentService {
         Assignment updated = assignmentRepository.save(assignment);
         return mapToResponse(updated);
     }
-    
+
     private AssignmentResponse mapToResponse(Assignment assignment) {
         int submissionCount = (int) submissionRepository.countByAssignmentId(assignment.getId());
-        
+
         return AssignmentResponse.builder()
                 .id(assignment.getId())
                 .title(assignment.getTitle())
                 .description(assignment.getDescription())
                 .deadline(assignment.getDeadline())
                 .mentorId(assignment.getMentorId())
-                .mentorName("Mentor") // TODO: Get from User service
+            .mentorName("Mentor #" + assignment.getMentorId())
                 .status(assignment.getStatus())
                 .submissionCount(submissionCount)
                 .createdAt(assignment.getCreatedAt())
                 .updatedAt(assignment.getUpdatedAt())
                 .build();
     }
-    
+
     private SubmissionResponse mapToSubmissionResponse(Submission submission) {
         return SubmissionResponse.builder()
                 .id(submission.getId())
                 .assignmentId(submission.getAssignmentId())
-                .assignmentTitle("Assignment") // TODO: Fetch from assignment
+                .assignmentTitle(resolveAssignmentTitle(submission.getAssignmentId()))
                 .internId(submission.getInternId())
-                .internName("Intern") // TODO: Get from User service
+                .internName("Intern #" + submission.getInternId())
                 .content(submission.getContent())
                 .attachmentUrl(submission.getAttachmentUrl())
                 .submittedAt(submission.getSubmittedAt())
@@ -262,5 +309,11 @@ public class AssignmentService {
                 .reviewedAt(submission.getReviewedAt())
                 .reviewedBy(submission.getReviewedBy())
                 .build();
+    }
+
+    private String resolveAssignmentTitle(Long assignmentId) {
+        return assignmentRepository.findById(assignmentId)
+                .map(Assignment::getTitle)
+                .orElse("Assignment #" + assignmentId);
     }
 }

@@ -55,6 +55,13 @@ imes:
     secret: your-256-bit-secret-key-here-make-it-long-enough-for-hs256-algorithm
     expiration: 86400000
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
 management:
   endpoints:
     web:

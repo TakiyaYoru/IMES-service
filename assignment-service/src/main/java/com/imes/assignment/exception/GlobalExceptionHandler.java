@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
                     .body(ResponseApi.error("0403", message));
         }
 
+        if (message.toLowerCase().contains("forbidden")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ResponseApi.error("0403", message));
+        }
+
         return ResponseEntity.badRequest()
                 .body(ResponseApi.error("0400", message));
     }

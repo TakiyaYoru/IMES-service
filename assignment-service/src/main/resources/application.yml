@@ -61,6 +61,13 @@ logging:
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
 imes:
   file-upload:
     base-dir: ${IMES_UPLOAD_BASE_DIR:/tmp/imes/uploads}

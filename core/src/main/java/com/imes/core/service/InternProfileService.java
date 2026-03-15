@@ -16,10 +16,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@SuppressWarnings("null")
 public class InternProfileService {
 
     private final InternProfileRepository internProfileRepository;
@@ -28,11 +31,9 @@ public class InternProfileService {
         if (internProfileRepository.existsByEmailAndIsActiveTrue(request.email())) {
             throw new ClientSideException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email đã tồn tại");
         }
-
         if (internProfileRepository.existsByStudentIdAndIsActiveTrue(request.studentId())) {
             throw new ClientSideException(ErrorCode.BAD_REQUEST, "Mã sinh viên đã tồn tại");
         }
-
         InternProfileEntity entity = InternProfileEntity.builder()
                 .email(request.email())
                 .studentId(request.studentId())
@@ -48,7 +49,6 @@ public class InternProfileService {
                 .status(InternStatus.NEW)
                 .isActive(true)
                 .build();
-
         entity = internProfileRepository.save(entity);
         return toResponse(entity);
     }
@@ -83,15 +83,8 @@ public class InternProfileService {
                 throw new ClientSideException(ErrorCode.BAD_REQUEST, "Trạng thái không hợp lệ");
             }
         }
-
         Page<InternProfileEntity> page = internProfileRepository.searchInternProfiles(
-                keyword,
-                internStatus,
-                mentorId,
-                departmentId,
-                true,
-                pageable
-        );
+                keyword, internStatus, mentorId, departmentId, true, pageable);
         return convertToPageResponse(page);
     }
 
@@ -128,14 +121,12 @@ public class InternProfileService {
             }
             entity.setEmail(request.email());
         }
-
         if (request.studentId() != null && !request.studentId().equals(entity.getStudentId())) {
             if (internProfileRepository.existsByStudentIdAndIsActiveTrue(request.studentId())) {
                 throw new ClientSideException(ErrorCode.BAD_REQUEST, "Mã sinh viên đã tồn tại");
             }
             entity.setStudentId(request.studentId());
         }
-
         if (request.fullName() != null) entity.setFullName(request.fullName());
         if (request.phoneNumber() != null) entity.setPhoneNumber(request.phoneNumber());
         if (request.major() != null) entity.setMajor(request.major());
@@ -152,7 +143,6 @@ public class InternProfileService {
                 throw new ClientSideException(ErrorCode.BAD_REQUEST, "Trạng thái không hợp lệ");
             }
         }
-
         entity = internProfileRepository.save(entity);
         return toResponse(entity);
     }
@@ -167,11 +157,9 @@ public class InternProfileService {
     public InternProfileResponse updateStartDate(Long id, LocalDate startDate) {
         InternProfileEntity entity = internProfileRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy hồ sơ"));
-
         if (entity.getEndDate() != null && startDate.isAfter(entity.getEndDate())) {
             throw new ClientSideException(ErrorCode.BAD_REQUEST, "Ngày bắt đầu phải trước ngày kết thúc");
         }
-
         entity.setStartDate(startDate);
         entity = internProfileRepository.save(entity);
         return toResponse(entity);
@@ -180,26 +168,89 @@ public class InternProfileService {
     public InternProfileResponse updateEndDate(Long id, LocalDate endDate) {
         InternProfileEntity entity = internProfileRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy hồ sơ"));
-
         if (entity.getStartDate() != null && endDate.isBefore(entity.getStartDate())) {
             throw new ClientSideException(ErrorCode.BAD_REQUEST, "Ngày kết thúc phải sau ngày bắt đầu");
         }
-
         entity.setEndDate(endDate);
         entity = internProfileRepository.save(entity);
         return toResponse(entity);
     }
 
+    /** Legacy: update status without state machine (used by general update) */
     public InternProfileResponse updateStatus(Long id, String status) {
         InternProfileEntity entity = internProfileRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy hồ sơ"));
-
         try {
             entity.setStatus(InternStatus.valueOf(status.toUpperCase()));
             entity = internProfileRepository.save(entity);
             return toResponse(entity);
         } catch (IllegalArgumentException e) {
             throw new ClientSideException(ErrorCode.BAD_REQUEST, "Trạng thái không hợp lệ");
+        }
+    }
+
+    /**
+     * Chuyển trạng thái intern theo State Machine.
+     * Transitions hợp lệ:
+     *   NEW        → ACTIVE      (yêu cầu: mentorId != null)
+     *   ACTIVE     → ON_LEAVE
+     *   ACTIVE     → COMPLETED   (yêu cầu: endDate != null)
+     *   ACTIVE     → TERMINATED
+     *   ON_LEAVE   → ACTIVE
+     *   ON_LEAVE   → TERMINATED
+     *   COMPLETED, TERMINATED → terminal
+     */
+    public InternProfileResponse changeStatus(Long id, String newStatusStr) {
+        InternProfileEntity entity = internProfileRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new ClientSideException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy hồ sơ"));
+
+        InternStatus target;
+        try {
+            target = InternStatus.valueOf(newStatusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST,
+                    "Trạng thái không hợp lệ: " + newStatusStr
+                    + ". Giá trị hợp lệ: NEW, ACTIVE, ON_LEAVE, COMPLETED, TERMINATED");
+        }
+
+        validateTransition(entity, entity.getStatus(), target);
+
+        if (target == InternStatus.ACTIVE && entity.getStartDate() == null) {
+            entity.setStartDate(LocalDate.now());
+        }
+        if ((target == InternStatus.COMPLETED || target == InternStatus.TERMINATED)
+                && entity.getEndDate() == null) {
+            entity.setEndDate(LocalDate.now());
+        }
+
+        entity.setStatus(target);
+        entity = internProfileRepository.save(entity);
+        return toResponse(entity);
+    }
+
+    private void validateTransition(InternProfileEntity entity, InternStatus current, InternStatus target) {
+        if (current == target) return;
+
+        Map<InternStatus, Set<InternStatus>> allowed = Map.of(
+                InternStatus.NEW,        Set.of(InternStatus.ACTIVE),
+                InternStatus.ACTIVE,     Set.of(InternStatus.ON_LEAVE, InternStatus.COMPLETED, InternStatus.TERMINATED),
+                InternStatus.ON_LEAVE,   Set.of(InternStatus.ACTIVE, InternStatus.TERMINATED),
+                InternStatus.COMPLETED,  Set.of(),
+                InternStatus.TERMINATED, Set.of()
+        );
+
+        if (!allowed.getOrDefault(current, Set.of()).contains(target)) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST,
+                    "Không thể chuyển trạng thái từ [" + current.getDisplayName()
+                    + "] sang [" + target.getDisplayName() + "]");
+        }
+        if (target == InternStatus.ACTIVE && entity.getMentorId() == null) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST,
+                    "Cần phân công Mentor trước khi kích hoạt thực tập");
+        }
+        if (target == InternStatus.COMPLETED && entity.getEndDate() == null) {
+            throw new ClientSideException(ErrorCode.BAD_REQUEST,
+                    "Cần thiết lập ngày kết thúc trước khi hoàn thành thực tập");
         }
     }
 
@@ -227,9 +278,9 @@ public class InternProfileService {
                 entity.getStartDate(),
                 entity.getEndDate(),
                 entity.getMentorId(),
-                null, // mentorName - will be resolved by client or in a separate call
+                null,
                 entity.getDepartmentId(),
-                null, // departmentName - will be resolved by client or in a separate call
+                null,
                 entity.getAvatarUrl(),
                 entity.getStatus().name(),
                 entity.getIsActive(),

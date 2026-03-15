@@ -1,0 +1,88 @@
+STT,Nhóm Chức Năng,Tính Năng,Mô Tả Chi Tiết,Vai Trò,Luồng Xử Lý,Business Rules,Validation Rules
+1,Xác Thực & Phân Quyền,Đăng Nhập (Login),Cho phép người dùng đăng nhập vào hệ thống bằng email và mật khẩu. Hệ thống xác thực và trả về JWT token,Tất cả người dùng,Client → Auth Service → Database → Tạo JWT → Response,"- Account phải active
+- JWT token có thời hạn 24h","- Email: Required, format hợp lệ
+- Password: Required, minimum 6 ký tự"
+2,Xác Thực & Phân Quyền,Đăng Xuất (Logout),Cho phép người dùng đăng xuất khỏi hệ thống. JWT token bị vô hiệu hóa,Tất cả người dùng đã login,Client → Auth Service → Xóa token → Success,"- Token bị blacklist sau logout","- Token phải valid"
+3,Quản Lý Người Dùng,Tạo Người Dùng Mới,HR tạo tài khoản mới cho HR/Mentor/Intern. Mật khẩu được mã hóa BCrypt,HR only,HR Client → Gateway → User Service → Hash password → Database → Response,"- Email không được trùng
+- Chỉ HR có quyền tạo user
+- Mặc định isActive = true","- Name: 2-100 ký tự
+- Email: unique, format hợp lệ
+- Password: minimum 6 ký tự
+- Role: HR/MENTOR/INTERN"
+4,Quản Lý Người Dùng,Xem Danh Sách Người Dùng,Lấy danh sách tất cả người dùng với phân trang. Hỗ trợ filter và search,HR only,HR Client → Gateway → User Service → Query với pagination → Response,"- Default page=0, size=20
+- Max size=100","- page: số nguyên >= 0
+- size: 1-100"
+5,Quản Lý Người Dùng,Xem Chi Tiết Người Dùng,Lấy thông tin chi tiết của 1 người dùng theo ID,HR hoặc chính user đó,Client → Gateway → User Service → Get by ID → Response,"- User chỉ xem được info của mình
+- HR xem được tất cả","- ID phải tồn tại"
+6,Quản Lý Người Dùng,Cập Nhật Người Dùng,Cập nhật thông tin người dùng (name, email, role, isActive),HR only,HR Client → Gateway → User Service → Validate → Update → Response,"- Không update password qua endpoint này
+- Email mới phải unique","- Name: 2-100 ký tự
+- Email: unique nếu thay đổi"
+7,Quản Lý Người Dùng,Xóa Người Dùng,Xóa người dùng khỏi hệ thống (soft/hard delete),HR only,HR Client → Gateway → User Service → Delete → Response,"- Không thể xóa chính mình
+- Recommend soft delete (isActive=false)","- ID phải tồn tại
+- Không phải chính mình"
+8,Quản Lý Intern,Thêm Intern Mới,HR tạo hồ sơ intern với thông tin đầy đủ (phone, address, school, major, dates),HR only,HR Client → Gateway → Intern Service → Validate → Insert → Response,"- Email intern không được trùng
+- startDate < endDate
+- Mặc định status = ACTIVE","- Full Name: 2-100 ký tự
+- Email: unique, format hợp lệ
+- Phone: format VN
+- StartDate: hôm nay hoặc tương lai
+- EndDate: sau startDate"
+9,Quản Lý Intern,Xem Danh Sách Intern,Xem danh sách tất cả intern với pagination, filter theo status, search theo tên/email,HR và Mentor,Client → Gateway → Intern Service → Query → Response,"- HR xem tất cả
+- Mentor chỉ xem intern được phân công","- Status: ACTIVE/COMPLETED/TERMINATED"
+10,Quản Lý Intern,Xem Chi Tiết Intern,Lấy thông tin chi tiết của 1 intern theo ID,HR và Mentor,Client → Gateway → Intern Service → Get by ID → Response,"- HR xem tất cả
+- Mentor chỉ xem intern của mình","- ID phải tồn tại"
+11,Quản Lý Intern,Cập Nhật Intern,Cập nhật thông tin intern (fullName, email, phone, address, school, major, dates),HR only,HR Client → Gateway → Intern Service → Validate → Update → Response,"- Email mới phải unique
+- Dates phải hợp lệ","- Giống validation khi tạo mới"
+12,Quản Lý Intern,Xóa/Kết Thúc Intern,Đánh dấu intern đã kết thúc (status = COMPLETED/TERMINATED),HR only,HR Client → Gateway → Intern Service → Update status → Response,"- Có thể kết thúc sớm nếu cần
+- Không thể khôi phục sau khi TERMINATED","- Status phải hợp lệ"
+13,Quản Lý Phòng Ban,Tạo Phòng Ban,HR tạo phòng ban mới trong công ty,HR only,HR Client → Gateway → Department Service → Insert → Response,"- Tên phòng ban không trùng
+- ManagerId phải là user có role MENTOR","- Name: unique, 2-100 ký tự
+- ManagerId: phải tồn tại"
+14,Quản Lý Phòng Ban,Danh Sách Phòng Ban,Xem danh sách tất cả phòng ban,Tất cả users,Client → Gateway → Department Service → Query → Response,"- Hiển thị cả thông tin manager","- Pagination support"
+15,Quản Lý Phòng Ban,Cập Nhật Phòng Ban,Cập nhật thông tin phòng ban,HR only,HR Client → Gateway → Department Service → Update → Response,"- Tên mới phải unique","- Name: 2-100 ký tự"
+16,Quản Lý Phòng Ban,Xóa Phòng Ban,Xóa phòng ban khỏi hệ thống,HR only,HR Client → Gateway → Department Service → Delete → Response,"- Không thể xóa phòng ban còn intern/mentor","- Phải trống intern và mentor"
+17,Quản Lý Bài Tập,Tạo Bài Tập,Mentor tạo bài tập mới cho intern (title, description, deadline),Mentor only,Mentor Client → Gateway → Assignment Service → Insert → Response,"- Status mặc định = OPEN
+- MentorId tự động từ X-User-Id
+- Gán cho tất cả intern của mentor","- Title: 5-255 ký tự
+- Description: max 5000 ký tự
+- Deadline: phải là ngày tương lai"
+18,Quản Lý Bài Tập,Xem Danh Sách Bài Tập,Mentor xem bài tập của mình. Intern xem bài tập được giao,Mentor và Intern,Client → Gateway → Assignment Service → Query theo role → Response,"- Mentor: xem assignment có mentorId = userId
+- Intern: xem assignment từ mentor được phân công
+- Pagination support","- page, size parameters"
+19,Quản Lý Bài Tập,Xem Chi Tiết Bài Tập,Xem chi tiết 1 assignment kèm số lượng submission,Mentor và Intern,Client → Gateway → Assignment Service → Get by ID → Response,"- Hiển thị submissionCount
+- Hiển thị status","- ID phải tồn tại"
+20,Quản Lý Bài Tập,Nộp Bài Tập,Intern nộp bài làm (content + attachmentUrl). Status tự động OPEN → SUBMITTED khi có submission đầu tiên,Intern only,Intern Client → Gateway → Assignment Service → Validate → Insert submission → Update status → Response,"- Mỗi intern chỉ nộp 1 lần/assignment (UNIQUE constraint)
+- Status chuyển OPEN → SUBMITTED khi có submission đầu
+- SubmissionCount tự động tăng
+- Có thể nộp sau deadline (warning)","- Content: minimum 10 ký tự
+- AttachmentUrl: URL format nếu có
+- Chưa nộp bài này trước đó"
+21,Quản Lý Bài Tập,Xem Danh Sách Bài Nộp,Mentor xem tất cả bài nộp của intern cho 1 assignment,Mentor only,Mentor Client → Gateway → Assignment Service → Query submissions → Response,"- Chỉ mentor tạo assignment xem được
+- Hiển thị theo thứ tự submittedAt DESC
+- Bao gồm thông tin intern (name)","- assignmentId phải của mentor"
+22,Quản Lý Bài Tập,Đánh Dấu Hoàn Thành,Mentor đánh dấu assignment hoàn thành sau khi review,Mentor only,Mentor Client → Gateway → Assignment Service → Update status → Response,"- Chỉ mentor tạo assignment có quyền
+- Status: SUBMITTED → COMPLETED","- Assignment phải status = SUBMITTED"
+23,Quản Lý Chấm Công,Check-in,Intern check-in khi đến công ty. Ghi nhận thời gian vào bảng attendances,Intern only,Intern Client → Gateway → Attendance Service → Validate → Insert → Response,"- Check-in time = thời gian hiện tại
+- Status = PRESENT (hoặc LATE nếu sau 9h)
+- Chỉ check-in 1 lần/ngày","- Chưa check-in hôm nay
+- Không thể check-in ngày quá khứ"
+24,Quản Lý Chấm Công,Check-out,Intern check-out khi về. Cập nhật checkOutTime và tính working hours,Intern only,Intern Client → Gateway → Attendance Service → Find record → Update → Calculate hours → Response,"- Phải check-in trước
+- Working hours = checkOutTime - checkInTime","- Đã check-in hôm nay
+- Chưa check-out"
+25,Quản Lý Chấm Công,Xem Lịch Sử Chấm Công,Xem lịch sử attendance theo tháng/tuần. Intern xem của mình. HR/Mentor xem tất cả,Intern (own) / HR / Mentor,Client → Gateway → Attendance Service → Query theo role → Response,"- Intern chỉ xem của mình
+- HR xem tất cả
+- Mentor xem intern được phân công
+- Filter theo startDate, endDate","- Date range phải hợp lệ"
+26,Quản Lý Chấm Công,Báo Cáo Chấm Công,Tổng hợp số ngày đi làm, đi muộn, nghỉ theo tháng/năm,HR và Mentor,Client → Gateway → Attendance Service → Aggregate → Response,"- Tính tổng: PRESENT, LATE, ABSENT
+- Group by month/year","- month: 1-12
+- year: 4 digits"
+27,Phân Công Mentor,Phân Công Mentor cho Intern,HR phân công mentor hướng dẫn intern trong khoảng thời gian,HR only,HR Client → Gateway → Mentor Assignment Service → Insert → Response,"- 1 intern có thể nhiều mentor (giai đoạn khác nhau)
+- 1 mentor có thể nhiều intern (cùng lúc)
+- startDate < endDate","- mentorId: phải tồn tại, role MENTOR
+- internId: phải tồn tại
+- startDate: hợm nay hoặc tương lai
+- endDate: sau startDate"
+28,Phân Công Mentor,Xem Danh Sách Intern của Mentor,Mentor xem danh sách intern được phân công hướng dẫn,Mentor,Mentor Client → Gateway → Mentor Assignment Service → Query → Response,"- Lấy active assignments (trong khoảng date hiện tại)
+- Bao gồm thông tin intern","- mentorId từ X-User-Id"
+29,Phân Công Mentor,Xem Mentor của Intern,Intern xem mentor đang hướng dẫn mình,Intern,Intern Client → Gateway → Mentor Assignment Service → Query → Response,"- Lấy active assignments
+- Bao gồm thông tin mentor","- internId từ X-User-Id"

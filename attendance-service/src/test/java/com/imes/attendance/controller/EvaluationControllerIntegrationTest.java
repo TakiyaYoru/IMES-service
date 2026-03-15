@@ -57,6 +57,8 @@ class EvaluationControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/evaluations")
+                .header("X-User-Id", "2")
+                .header("X-User-Role", "MENTOR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -68,7 +70,8 @@ class EvaluationControllerIntegrationTest {
     void submitEvaluation_ShouldReturnSubmitted() throws Exception {
         when(evaluationService.submit(1L)).thenReturn(sampleResponse("SUBMITTED"));
 
-        mockMvc.perform(post("/evaluations/1/submit"))
+        mockMvc.perform(post("/evaluations/1/submit")
+                .header("X-User-Role", "MENTOR"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("SUBMITTED"));
     }
@@ -78,6 +81,7 @@ class EvaluationControllerIntegrationTest {
         when(evaluationService.getAll(any(), any(), any(), any())).thenReturn(List.of(sampleResponse("FINALIZED")));
 
         mockMvc.perform(get("/evaluations")
+                .header("X-User-Role", "MENTOR")
                         .param("internId", "4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].internProfileId").value(4));

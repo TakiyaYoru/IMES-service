@@ -1,0 +1,26 @@
+===========================================
+IMES SYSTEM - TEST ACCOUNTS
+===========================================
+
+1. ADMIN ACCOUNT
+   Email: admin@imes.com
+   Password: admin123
+   Role: ADMIN
+
+2. HR ACCOUNT
+   Email: hr@imes.com
+   Password: hr123
+   Role: HR
+
+3. MENTOR ACCOUNT
+   Email: mentor@imes.com
+   Password: mentor123
+   Role: MENTOR
+
+4. INTERN ACCOUNT
+   Email: intern@imes.com
+   Password: intern123
+   Role: INTERN
+
+===========================================
+NOTE: All accounts are active (is_active=true)

@@ -80,6 +80,7 @@ public class AuthController {
             
             RefreshTokenResponse response = RefreshTokenResponse.builder()
                     .accessToken(newAccessToken)
+                    .token(newAccessToken)
                     .refreshToken(newRefreshToken.getToken())
                     .tokenType("Bearer")
                     .expiresIn(3600L) // 1 hour

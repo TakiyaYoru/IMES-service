@@ -53,6 +53,13 @@ spring:
             - Path=/attendances/**
           filters:
             - StripPrefix=0
+
+        - id: attendance-service-evaluations
+          uri: lb://ATTENDANCE-SERVICE
+          predicates:
+            - Path=/evaluations/**
+          filters:
+            - StripPrefix=0
         
         # Assignment Service Routes (for future)
         - id: assignment-service

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="v1.4.1_optimize_attendance_analytics_indexes" author="system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="attendances"/>
+        </preConditions>
+
+        <!-- Composite indexes for analytics queries by date range + active flag -->
+        <createIndex indexName="idx_attendance_active_date" tableName="attendances">
+            <column name="is_active"/>
+            <column name="date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_attendance_active_date_status" tableName="attendances">
+            <column name="is_active"/>
+            <column name="date"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_attendance_active_intern_date" tableName="attendances">
+            <column name="is_active"/>
+            <column name="intern_profile_id"/>
+            <column name="date"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="attendances" indexName="idx_attendance_active_date"/>
+            <dropIndex tableName="attendances" indexName="idx_attendance_active_date_status"/>
+            <dropIndex tableName="attendances" indexName="idx_attendance_active_intern_date"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

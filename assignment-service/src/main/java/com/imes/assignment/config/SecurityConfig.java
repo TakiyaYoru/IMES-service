@@ -20,7 +20,8 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/assignments/health", "/actuator/**").permitAll()
+                .requestMatchers("/assignments/health", "/actuator/**",
+                    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().permitAll() // MVP: Allow all for testing
             )
             .sessionManagement(session -> session

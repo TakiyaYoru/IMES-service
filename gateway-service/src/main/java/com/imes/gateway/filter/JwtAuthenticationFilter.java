@@ -33,7 +33,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/auth/forgot-password",
             "/auth/reset-password",
             "/auth/refresh",
-            "/eureka"
+            "/eureka",
+            // Health / actuator endpoints — always public
+            "/auth/health",
+            "/assignments/health",
+            "/attendances/health",
+            "/interns/health",
+            "/users/health",
+            "/actuator"
     );
 
     @Override

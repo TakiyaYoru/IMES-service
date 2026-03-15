@@ -36,6 +36,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest().body(ApiResponse.error("3002", ex.getMessage()));
+        String message = ex.getMessage() == null ? "Bad request" : ex.getMessage();
+        if (message.toLowerCase().contains("forbidden")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error("0403", message));
+        }
+        return ResponseEntity.badRequest().body(ApiResponse.error("3002", message));
     }
 }
