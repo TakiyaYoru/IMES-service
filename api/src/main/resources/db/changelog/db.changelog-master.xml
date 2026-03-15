@@ -13,5 +13,8 @@
     <include file="db/changelog/changes/v1.2.0_create_mentor_assignments_table.xml"/>
     <include file="db/changelog/changes/v1.3.0_create_attendances_table.xml"/>
     <include file="db/changelog/changes/v1.4.0_create_assignments_table.xml"/>
+    <include file="db/changelog/changes/v1.4.1_optimize_attendance_analytics_indexes.xml"/>
+    <include file="db/changelog/changes/v1.4.3_create_attendance_anomalies_table.xml"/>
+    <include file="db/changelog/changes/v1.5.0_create_evaluation_tables.xml"/>
 
 </databaseChangeLog>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="v1.5.0_create_evaluation_templates_table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="evaluation_templates"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="evaluation_templates">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="evaluation_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluation_templates"
+                baseColumnNames="created_by"
+                constraintName="fk_eval_template_created_by"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+
+        <createIndex indexName="idx_eval_template_type_active" tableName="evaluation_templates">
+            <column name="evaluation_type"/>
+            <column name="is_active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="evaluation_templates"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="v1.5.0_create_evaluation_criteria_table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="evaluation_criteria"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="evaluation_criteria">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="template_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criteria_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criteria_description" type="TEXT"/>
+            <column name="weight" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_score" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_order" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluation_criteria"
+                baseColumnNames="template_id"
+                constraintName="fk_eval_criteria_template"
+                referencedTableName="evaluation_templates"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addUniqueConstraint
+                tableName="evaluation_criteria"
+                columnNames="template_id, display_order"
+                constraintName="uk_eval_criteria_template_order"/>
+
+        <createIndex indexName="idx_eval_criteria_template" tableName="evaluation_criteria">
+            <column name="template_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="evaluation_criteria"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="v1.5.0_create_evaluations_table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="evaluations"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="evaluations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="intern_profile_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="template_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evaluator_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evaluation_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_start" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="period_end" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="DRAFT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_score" type="DECIMAL(5,2)"/>
+            <column name="grade" type="VARCHAR(10)"/>
+            <column name="overall_comment" type="TEXT"/>
+            <column name="submitted_at" type="TIMESTAMP"/>
+            <column name="reviewed_at" type="TIMESTAMP"/>
+            <column name="finalized_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluations"
+                baseColumnNames="intern_profile_id"
+                constraintName="fk_evaluations_intern_profile"
+                referencedTableName="intern_profiles"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluations"
+                baseColumnNames="template_id"
+                constraintName="fk_evaluations_template"
+                referencedTableName="evaluation_templates"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluations"
+                baseColumnNames="evaluator_id"
+                constraintName="fk_evaluations_evaluator"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+
+        <addUniqueConstraint
+                tableName="evaluations"
+                columnNames="intern_profile_id, evaluation_type, period_start, period_end"
+                constraintName="uk_eval_intern_type_period"/>
+
+        <createIndex indexName="idx_evaluations_intern" tableName="evaluations">
+            <column name="intern_profile_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_evaluations_status" tableName="evaluations">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_evaluations_type_period" tableName="evaluations">
+            <column name="evaluation_type"/>
+            <column name="period_start"/>
+            <column name="period_end"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="evaluations"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="v1.5.0_create_evaluation_scores_table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="evaluation_scores"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="evaluation_scores">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="evaluation_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criteria_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="score" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="evidence" type="TEXT"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluation_scores"
+                baseColumnNames="evaluation_id"
+                constraintName="fk_eval_scores_evaluation"
+                referencedTableName="evaluations"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="evaluation_scores"
+                baseColumnNames="criteria_id"
+                constraintName="fk_eval_scores_criteria"
+                referencedTableName="evaluation_criteria"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+
+        <addUniqueConstraint
+                tableName="evaluation_scores"
+                columnNames="evaluation_id, criteria_id"
+                constraintName="uk_eval_scores_eval_criteria"/>
+
+        <createIndex indexName="idx_eval_scores_evaluation" tableName="evaluation_scores">
+            <column name="evaluation_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="evaluation_scores"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
