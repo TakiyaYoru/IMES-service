@@ -1,0 +1,117 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  
+  cloud:
+    gateway:
+      routes:
+        # Auth Service Routes
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=0
+        
+        # User Service Routes
+        - id: user-service-users
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+          filters:
+            - StripPrefix=0
+        
+        - id: user-service-departments
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/departments/**
+          filters:
+            - StripPrefix=0
+        
+        # Intern Service Routes
+        - id: intern-service-interns
+          uri: lb://INTERN-SERVICE
+          predicates:
+            - Path=/interns/**
+          filters:
+            - StripPrefix=0
+        
+        - id: intern-service-mentor-assignments
+          uri: lb://INTERN-SERVICE
+          predicates:
+            - Path=/mentor-assignments/**
+          filters:
+            - StripPrefix=0
+        
+        # Attendance Service Routes
+        - id: attendance-service
+          uri: lb://ATTENDANCE-SERVICE
+          predicates:
+            - Path=/attendances/**
+          filters:
+            - StripPrefix=0
+        
+        # Assignment Service Routes (for future)
+        - id: assignment-service
+          uri: lb://ASSIGNMENT-SERVICE
+          predicates:
+            - Path=/assignments/**
+          filters:
+            - StripPrefix=0
+      
+      # Global CORS Configuration
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: 
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      
+      # Default filters for all routes
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+# Eureka Client Configuration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    preferIpAddress: true
+    instanceId: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO
+    com.imes.gateway: DEBUG
+
+# JWT Configuration (must match auth-service)
+jwt:
+  secret: IMESSecretKeyForJWTTokenGenerationAndValidation2024SecureKey
+  expiration: 86400000

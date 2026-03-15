@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: intern-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5433/imes_db
+    username: imes_user
+    password: imes_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  liquibase:
+    enabled: false
+
+  # Email Configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    from: ${MAIL_FROM:noreply@imes.com}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8083
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  secret: your-256-bit-secret-key-here-make-it-long-enough-for-hs256-algorithm
+  expiration: 86400000
+
+imes:
+  jwt:
+    secret: your-256-bit-secret-key-here-make-it-long-enough-for-hs256-algorithm
+    expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
